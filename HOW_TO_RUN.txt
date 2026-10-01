@@ -1,0 +1,49 @@
+======================================================================
+      KABIR PUBLICATION - KISI BHI DUSRE LAPTOP MEIN KAISE CHALAYEIN
+======================================================================
+
+Yeh package aapke Kabir Publication system ka complete version hai.
+Aap isko Pen Drive, Google Drive, WhatsApp, ya kisi bhi tareeqe se dusre laptop mein le ja sakte hain.
+
+KAAM KAISE KAREIN:
+----------------------------------------------------------------------
+1. Is ZIP file ko right-click karke "Extract All" (Unzip) karein.
+2. Folder ke andar "Run_Website.bat" par DOUBLE CLICK karein!
+3. Website automatically aapke browser (Chrome/Edge) mein khul jayegi:
+   http://localhost:3000
+
+AGAR DUSRE LAPTOP MEIN NODE.JS NAHI HAI:
+----------------------------------------------------------------------
+- "Run_Website.bat" ya seedhe "index.html" par double click karein!
+- Website bina kisi server ke bhi 100% offline chalegi.
+- Excel Upload, PDF Label Importer, WhatsApp Dispatch, aur Labels Print
+  sab kuch smoothly chalega!
+
+======================================================================
+LOGIN CREDENTIALS (WEBSITE OPEN KARNE KE LIYE):
+======================================================================
+- Username : admin
+- Password : admin@123
+
+(Login screen par username aur password enter karke "Log In to System" 
+par click karein ya Enter dabayein)
+
+======================================================================
+AGAR MULTI-DEVICE MEIN CHALANA HO (PHONE / DUSRE LAPTOP MEIN):
+----------------------------------------------------------------------
+1. Main computer par "Run_Website.bat" double-click karke server start karein.
+2. Dono devices (Laptop aur Mobile/Dusra Laptop) same Wi-Fi ya Mobile Hotspot se connect karein.
+3. Website khulne ke baad top header mein "📱 Sync" button par click karein:
+   - Mobile browser mein network link dalein (jaise http://192.168.x.x:3000)
+   - Official Kabir Publication logo & link screen par display hoga
+4. ⚡ LIVE SYNC: Ek device mein website ka naam ya naya order change karenge,
+   toh doosre sabhi laptops aur phones mein bina refresh kiye turant change ho jayega!
+
+======================================================================
+AGAR SERVER BHI CHALANA HO:
+----------------------------------------------------------------------
+- Dusre laptop mein bas ek baar https://nodejs.org se Node.js install kar lein.
+- Fir "Run_Website.bat" chalane par server aur multi-device sharing dono chalenge.
+
+Dhanyawaad!
+Kabir Publication

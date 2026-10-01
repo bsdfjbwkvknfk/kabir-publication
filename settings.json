@@ -1,0 +1,42 @@
+{
+  "businessName": "Kabir Publication",
+  "businessSubtitle": "Book Order Management System",
+  "businessWhatsApp": "9413508833",
+  "senderAddress": "Kabir Publication",
+  "senderPhone": "9413508833",
+  "whatsappMode": "manual",
+  "cloudApiToken": "",
+  "cloudApiPhoneId": "",
+  "cloudApiBusinessId": "",
+  "cloudApiVersion": "v19.0",
+  "defaultStatus": "Packed",
+  "defaultPayment": "COD",
+  "books": [
+    "11th class book"
+  ],
+  "defaultBook": "Non",
+  "couriers": [
+    {
+      "name": "India Post",
+      "urlTemplate": "https://www.indiapost.gov.in/"
+    },
+    {
+      "name": "Delhivery",
+      "urlTemplate": "https://www.delhivery.com/track/package/{{tracking}}"
+    },
+    {
+      "name": "Blue Dart",
+      "urlTemplate": "https://www.bluedart.com/tracking?handler=tnt&action=custfindbox&tracktype=awb&trackid={{tracking}}"
+    },
+    {
+      "name": "DTDC",
+      "urlTemplate": "https://www.dtdc.in/tracking/shipment-tracking.asp?trkid={{tracking}}"
+    },
+    {
+      "name": "Other",
+      "urlTemplate": "https://www.google.com/search?q={{courier}}+tracking+{{tracking}}"
+    }
+  ],
+  "whatsappTemplate": "📦 Kabir Publication – Order Dispatched!\n\nNamaste {{name}} ji 🙏\n\nAapki book {{book}} successfully dispatch ho gayi hai. 🎉\n\n📚 Book: {{book}}\n\n🚚 Tracking ID (Tap to Copy):\n`{{tracking}}`\n\n🔎 Shipment Track Karein:\n{{tracking_link}}\n\nAap upar diye gaye Tracking ID par click/tap karke copy kar sakte hain aur link se tracking status check kar sakte hain.\n\nAapke order ke liye Kabir Publication ko chunne ke liye dhanyavaad. ❤️\n\nKabir Publication 📚",
+  "firebaseDbUrl": ""
+}

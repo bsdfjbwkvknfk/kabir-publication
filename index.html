@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kabir Publication – Book Order & WhatsApp Management System</title>
+  
+  <meta name="description" content="Professional Book Order, Shipping Label & WhatsApp Communication Management System for Kabir Publication">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css?v=2.0">
+
+  <!-- PDF Extraction & Generation CDN Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Barcode & OCR Engines (Code128 Barcode + Text OCR for India Post Labels) -->
+  <script src="js/zxing.min.js"></script>
+  <script src="js/tesseract.min.js"></script>
+  <!-- Excel / XLSX Parsing Engine -->
+  <script src="js/xlsx.full.min.js"></script>
+
+  <!-- Instant Authentication State Pre-Check (Prevents unauthenticated flash) -->
+  <script>
+    (function() {
+      try {
+        var isAuth = sessionStorage.getItem('kp_auth_logged_in') === 'true' || 
+                     localStorage.getItem('kp_auth_logged_in') === 'true';
+        if (isAuth) {
+          document.documentElement.classList.add('user-is-authenticated');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- Mobile Drawer Overlay -->
+  <div class="mobile-overlay" id="mobile-overlay" onclick="window.KPApp.closeMobileNav()"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- ==============================================================
+       SECURE LOGIN GATE SCREEN
+       Credentials:
+       Username: admin
+       Password: admin@123
+       ============================================================== -->
+  <div id="login-gate" class="login-gate-screen">
+    <div class="login-background-decor">
+      <div class="decor-circle decor-1"></div>
+      <div class="decor-circle decor-2"></div>
+      <div class="decor-circle decor-3"></div>
+    </div>
+
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="login-logo-wrapper">
+            <img src="logo.jpeg" alt="Kabir Publication Logo" class="login-logo-img" onerror="this.src='logo.png'">
+          </div>
+          <h2 class="login-title">Kabir Publication</h2>
+          <p class="login-subtitle">Book Order & WhatsApp Management System</p>
+          <div class="login-badge">
+            <span class="badge-icon">🔐</span>
+            <span>Admin Access Portal</span>
+          </div>
+        </div>
+
+        <form id="login-form" class="login-form" onsubmit="event.preventDefault(); window.KPAuth.handleLoginSubmit();" autocomplete="on">
+          <!-- Error Alert -->
+          <div id="login-error-alert" class="login-alert login-alert-error" style="display: none;">
+            <span class="alert-icon">⚠️</span>
+            <span id="login-error-msg">Username ya Password galat hai!</span>
+          </div>
+
+          <!-- Success Alert -->
+          <div id="login-success-alert" class="login-alert login-alert-success" style="display: none;">
+            <span class="alert-icon">✅</span>
+            <span>Login successful! Opening dashboard...</span>
+          </div>
+
+          <div class="login-field-group">
+            <label for="login-username" class="login-label">
+              <span>Username / यूजरनेम</span>
+            </label>
+            <div class="login-input-wrapper">
+              <span class="input-icon">👤</span>
+              <input 
+                type="text" 
+                id="login-username" 
+                class="login-input" 
+                placeholder="Username darj karein..." 
+                autocomplete="username"
+                required 
+                autofocus
+              >
+            </div>
+          </div>
+
+          <div class="login-field-group">
+            <div class="label-with-toggle">
+              <label for="login-password" class="login-label">
+                <span>Password / पासवर्ड</span>
+              </label>
+            </div>
+            <div class="login-input-wrapper">
+              <span class="input-icon">🔑</span>
+              <input 
+                type="password" 
+                id="login-password" 
+                class="login-input" 
+                placeholder="Password darj karein..." 
+                autocomplete="current-password"
+                required
+              >
+              <button 
+                type="button" 
+                class="btn-toggle-pwd" 
+                id="btn-toggle-pwd" 
+                onclick="window.KPAuth.togglePasswordVisibility()" 
+                title="Show/Hide Password"
+                tabindex="-1"
+              >
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <div class="login-options-row">
+            <label class="remember-me-checkbox">
+              <input type="checkbox" id="login-remember-me" checked>
+              <span class="checkbox-label">Remember on this laptop / device</span>
+            </label>
+          </div>
+
+          <button type="submit" id="btn-login-submit" class="btn-login-submit">
+            <span class="btn-text">Log In to System / लॉगिन करें</span>
+            <span class="btn-icon">➔</span>
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <div class="footer-branch">Satlok Ashram, Barwala (Hisar)</div>
+          <div class="footer-note">Kabir Publication • Book Distribution Desk</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application Layout -->
+  <div class="app-wrapper" id="app-wrapper">
+
+    <!-- Left Sidebar Navigation -->
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="sidebar-brand">
+        <img src="logo.jpeg" alt="Kabir Publication Logo" class="brand-logo-img" onerror="this.src='logo.png'">
+        <div>
+          <div class="brand-title">Kabir Publication</div>
+          <div class="brand-sub">Book Order Management</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Core Menu</div>
+        <button class="nav-link active" data-view="dashboard" id="nav-btn-dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-link" data-view="add-order" id="nav-btn-add-order">
+          <span class="nav-icon">➕</span>
+          <span>Add New Order</span>
+        </button>
+
+        <button class="nav-link" data-view="orders-all" id="nav-btn-orders-all">
+          <span class="nav-icon">📦</span>
+          <span>All Orders</span>
+        </button>
+
+        <div class="nav-section-title">Quick Views</div>
+        <button class="nav-link" data-view="orders-packed" id="nav-btn-packed">
+          <span class="nav-icon">📦</span>
+          <span>Packed Orders</span>
+        </button>
+
+        <button class="nav-link" data-view="orders-shipped" id="nav-btn-shipped">
+          <span class="nav-icon">🚚</span>
+          <span>Shipped Orders</span>
+        </button>
+
+        <button class="nav-link" data-view="orders-delivered" id="nav-btn-delivered">
+          <span class="nav-icon">✅</span>
+          <span>Delivered Orders</span>
+        </button>
+
+        <button class="nav-link" data-view="orders-returned" id="nav-btn-returned">
+          <span class="nav-icon">↩️</span>
+          <span>Returned Orders</span>
+        </button>
+
+        <div class="nav-section-title">Shipping & Messaging</div>
+        <button class="nav-link" data-view="whatsapp" id="nav-btn-whatsapp">
+          <span class="nav-icon">💬</span>
+          <span>WhatsApp Messages</span>
+        </button>
+
+        <button class="nav-link" data-view="shipping-labels" id="nav-btn-labels">
+          <span class="nav-icon">🏷️</span>
+          <span>Shipping Labels</span>
+        </button>
+
+        <button class="nav-link" data-view="reports" id="nav-btn-reports">
+          <span class="nav-icon">📈</span>
+          <span>Reports & Analytics</span>
+        </button>
+
+        <button class="nav-link" data-view="settings" id="nav-btn-settings">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </button>
+
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-auth-user">
+          <div class="user-info-mini">
+            <span class="user-avatar">👤</span>
+            <div class="user-details">
+              <span class="user-name">Admin</span>
+              <span class="user-status-dot">Logged In</span>
+            </div>
+          </div>
+          <button type="button" class="btn-sidebar-logout" onclick="window.KPAuth.logout(true)" title="Logout from System">
+            Logout 🚪
+          </button>
+        </div>
+        <div class="helpline-box">
+          <span>📞 WhatsApp:</span>
+          <span id="sidebar-helpline-phone">9413508833</span>
+        </div>
+        <div id="sidebar-sender-address">Satlok Ashram, Barwala (Hisar)</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Container -->
+    <div class="app-main">
+      
+      <!-- Top Sticky Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <button class="mobile-nav-toggle" id="mobile-nav-toggle" onclick="window.KPApp.openMobileNav()" title="Open Navigation Menu">
+            ☰
+          </button>
+          
+          <div class="header-search">
+            <span class="search-icon-inside">🔍</span>
+            <input 
+              type="search" 
+              id="global-search-input" 
+              name="kp_global_search_filter"
+              autocomplete="off" 
+              autocorrect="off" 
+              autocapitalize="off" 
+              spellcheck="false" 
+              data-lpignore="true" 
+              data-form-type="other"
+              placeholder="Search customer, mobile, tracking, book, pin..."
+            >
+          </div>
+        </div>
+
+        <div class="header-right">
+          <button type="button" class="btn-database-status" id="btn-header-db-status" onclick="window.KPApp.openDeviceSyncModal()" title="Live Database & Multi-Device Sync Center">
+            <span class="db-status-dot" id="sync-header-dot"></span>
+            <span id="sync-header-text">🟢 Database: Connected</span>
+          </button>
+
+          <button class="btn btn-secondary btn-sm" onclick="window.KPApp.navigateTo('shipping-labels')">
+            📄 Upload Labels
+          </button>
+
+          <button class="btn btn-primary btn-sm" onclick="window.KPApp.navigateTo('add-order')">
+            + New Order
+          </button>
+
+          <div class="header-user-badge" title="Logged in as Admin">
+            <span class="user-avatar-circle">👤</span>
+            <span class="user-role-text">Admin</span>
+            <button type="button" class="btn-logout-sm" onclick="window.KPAuth.logout(true)" title="Logout / लॉग आउट करें">
+              🚪 Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- View Containers -->
+      <main class="view-content">
+
+        <!-- ==============================================================
+             VIEW 1: MAIN DASHBOARD
+             ============================================================== -->
+        <section class="view-section active-view" id="view-dashboard">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Kabir Publication – Book Order Dashboard</h1>
+              <p class="page-subtitle">Real-time book order processing, shipment tracking & customer WhatsApp notification center</p>
+            </div>
+            <div class="page-actions">
+              <label class="btn btn-secondary btn-sm" style="margin:0; cursor:pointer;" title="Upload Shipping Labels / Excel Sheet">
+                📁 Upload Labels / Excel
+                <input type="file" accept=".xlsx, .xls, .csv, .pdf, .png, .jpg, .jpeg, .txt" multiple style="display:none;" onchange="window.KPApp.handleBatchUpload(this.files)">
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="window.KPReports.exportOrdersToCSV()">
+                📥 Export CSV
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="window.KPApp.navigateTo('add-order')">
+                + Add Order
+              </button>
+            </div>
+          </div>
+
+          <!-- Monetary KPI Highlights -->
+          <div class="finance-highlight-row">
+            <div class="finance-card">
+              <div class="finance-info">
+                <div class="finance-label">Total COD / Order Value</div>
+                <div class="finance-val" id="stat-total-cod-amount">₹0</div>
+              </div>
+              <div class="stat-icon">💰</div>
+            </div>
+
+            <div class="finance-card">
+              <div class="finance-info">
+                <div class="finance-label">Pending COD Amount</div>
+                <div class="finance-val" id="stat-pending-cod-amount">₹0</div>
+              </div>
+              <div class="stat-icon">⏳</div>
+            </div>
+
+            <div class="finance-card">
+              <div class="finance-info">
+                <div class="finance-label">Paid / Collected Amount</div>
+                <div class="finance-val" id="stat-paid-amount">₹0</div>
+              </div>
+              <div class="stat-icon">✅</div>
+            </div>
+          </div>
+
+          <!-- 10 Interactive Statistics Cards (Clickable to Filter Orders) -->
+          <div class="stats-grid">
+            <!-- 1. Total Orders -->
+            <div class="stat-card card-theme-total" id="card-total-orders" title="Click to view All Orders">
+              <div class="stat-card-header">
+                <span class="stat-title">Total Orders</span>
+                <span class="stat-icon">📚</span>
+              </div>
+              <div class="stat-value" id="stat-total-orders">0</div>
+              <div class="stat-hint">Click to view all</div>
+            </div>
+
+            <!-- 2. Packed -->
+            <div class="stat-card card-theme-packed" id="card-packed" title="Click to view Packed Orders">
+              <div class="stat-card-header">
+                <span class="stat-title">Packed</span>
+                <span class="stat-icon">📦</span>
+              </div>
+              <div class="stat-value" id="stat-packed">0</div>
+              <div class="stat-hint">Ready for dispatch</div>
+            </div>
+
+            <!-- 3. Shipped -->
+            <div class="stat-card card-theme-shipped" id="card-shipped" title="Click to view Shipped Orders">
+              <div class="stat-card-header">
+                <span class="stat-title">Shipped</span>
+                <span class="stat-icon">🚚</span>
+              </div>
+              <div class="stat-value" id="stat-shipped">0</div>
+              <div class="stat-hint">In courier transit</div>
+            </div>
+
+            <!-- 4. Delivered -->
+            <div class="stat-card card-theme-delivered" id="card-delivered" title="Click to view Delivered Orders">
+              <div class="stat-card-header">
+                <span class="stat-title">Delivered</span>
+                <span class="stat-icon">🎉</span>
+              </div>
+              <div class="stat-value" id="stat-delivered">0</div>
+              <div class="stat-hint">Received by devotee</div>
+            </div>
+
+            <!-- 5. Returned -->
+            <div class="stat-card card-theme-returned" id="card-returned" title="Click to view Returned Orders">
+              <div class="stat-card-header">
+                <span class="stat-title">Returned</span>
+                <span class="stat-icon">↩️</span>
+              </div>
+              <div class="stat-value" id="stat-returned">0</div>
+              <div class="stat-hint">RTO shipments</div>
+            </div>
+
+            <!-- 6. Cancelled -->
+            <div class="stat-card card-theme-cancelled" id="card-cancelled" title="Click to view Cancelled Orders">
+              <div class="stat-card-header">
+                <span class="stat-title">Cancelled</span>
+                <span class="stat-icon">❌</span>
+              </div>
+              <div class="stat-value" id="stat-cancelled">0</div>
+              <div class="stat-hint">Cancelled requests</div>
+            </div>
+
+            <!-- 7. COD Orders -->
+            <div class="stat-card card-theme-cod" id="card-cod-pending" title="Click to view COD Orders">
+              <div class="stat-card-header">
+                <span class="stat-title">COD Orders</span>
+                <span class="stat-icon">💵</span>
+              </div>
+              <div class="stat-value" id="stat-cod-pending">0</div>
+              <div class="stat-hint">Cash on Delivery</div>
+            </div>
+
+            <!-- 8. Online Orders -->
+            <div class="stat-card card-theme-paid" id="card-paid" title="Click to view Online Orders">
+              <div class="stat-card-header">
+                <span class="stat-title">Online Orders</span>
+                <span class="stat-icon">💳</span>
+              </div>
+              <div class="stat-value" id="stat-paid">0</div>
+              <div class="stat-hint">Prepaid / Online</div>
+            </div>
+
+            <!-- 9. WhatsApp Pending -->
+            <div class="stat-card card-theme-wa-pending" id="card-wa-pending" title="Click to view WhatsApp Pending">
+              <div class="stat-card-header">
+                <span class="stat-title">WA Pending</span>
+                <span class="stat-icon">⏳</span>
+              </div>
+              <div class="stat-value" id="stat-wa-pending">0</div>
+              <div class="stat-hint">Needs tracking msg</div>
+            </div>
+
+            <!-- 10. WhatsApp Sent -->
+            <div class="stat-card card-theme-wa-sent" id="card-wa-sent" title="Click to view WhatsApp Sent">
+              <div class="stat-card-header">
+                <span class="stat-title">WA Sent</span>
+                <span class="stat-icon">💬</span>
+              </div>
+              <div class="stat-value" id="stat-wa-sent">0</div>
+              <div class="stat-hint">Message dispatched</div>
+            </div>
+          </div>
+
+          <!-- Recent Orders Widget Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📦 Recent Book Orders</div>
+              <button class="btn btn-outline btn-sm" onclick="window.KPApp.navigateTo('orders-all')">
+                View All Orders →
+              </button>
+            </div>
+            <div class="card-body">
+              <div id="dashboard-recent-orders">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             VIEW 2: ADD / EDIT ORDER
+             ============================================================== -->
+        <section class="view-section" id="view-add-order">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title" id="order-form-title">Add New Book Order</h1>
+              <p class="page-subtitle">Enter customer delivery details, literature name, tracking code and payment info</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-secondary btn-sm" onclick="window.KPApp.clearOrderForm()">🔄 Reset Form</button>
+              <button class="btn btn-outline btn-sm" onclick="window.KPApp.navigateTo('orders-all')">View All Orders</button>
+            </div>
+          </div>
+
+          <form id="order-entry-form" onsubmit="event.preventDefault();">
+            <input type="hidden" id="form-order-id">
+
+            <div class="form-grid">
+              
+              <!-- Card 1: Customer & Delivery Details -->
+              <div class="form-card">
+                <div class="form-card-title">👤 Customer Delivery Details</div>
+
+                <div class="form-group">
+                  <label class="form-label" for="form-customer-name">Customer Name <span class="req">*</span></label>
+                  <input type="text" id="form-customer-name" class="form-input" placeholder="e.g. Ramesh Kumar Sharma" required>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="form-mobile">Mobile Number (Indian 10-digit) <span class="req">*</span></label>
+                    <input type="tel" id="form-mobile" class="form-input" placeholder="e.g. 9829123456" maxlength="10" required>
+                    <div class="form-help">Must start with 6, 7, 8, or 9</div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="form-address-type">Address Type</label>
+                    <select id="form-address-type" class="form-select">
+                      <option value="Home">Home</option>
+                      <option value="Office">Office</option>
+                      <option value="Shop">Shop / Business</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="form-address">Complete Delivery Address <span class="req">*</span></label>
+                  <textarea id="form-address" class="form-textarea" placeholder="House/Flat No., Street, Colony, Landmark..." required></textarea>
+                </div>
+
+                <div class="form-row-3">
+                  <div class="form-group">
+                    <label class="form-label" for="form-city">City / Village <span class="req">*</span></label>
+                    <input type="text" id="form-city" class="form-input" placeholder="City" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="form-state">State <span class="req">*</span></label>
+                    <input type="text" id="form-state" class="form-input" placeholder="State" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="form-pincode">PIN Code (6 digits) <span class="req">*</span></label>
+                    <input type="text" id="form-pincode" class="form-input" placeholder="e.g. 125001" maxlength="6" required>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Book & Shipment Details -->
+              <div class="form-card">
+                <div class="form-card-title">📚 Book Literature & Shipment</div>
+
+                <div class="form-group">
+                  <label class="form-label" for="form-book-name">Book Name <span class="req">*</span></label>
+                  <input type="text" id="form-book-name" class="form-input" list="book-suggestions" placeholder="Select or type book title..." required>
+                  <datalist id="book-suggestions">
+                    <option value="Gyan Ganga"></option>
+                    <option value="Jeene Ki Raah"></option>
+                    <option value="Geeta Tera Gyan Amrit"></option>
+                    <option value="Bhakti Se Bhagwan Tak"></option>
+                    <option value="Dharm Bodh"></option>
+                    <option value="Andh Shradha Bhakti Khatra-e-Jaan"></option>
+                    <option value="Kabir Sahib Vaani"></option>
+                  </datalist>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="form-quantity">Quantity</label>
+                    <input type="number" id="form-quantity" class="form-input" value="1" min="1" max="100">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="form-order-date">Order Date</label>
+                    <input type="date" id="form-order-date" class="form-input">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="form-courier">Courier Partner</label>
+                    <select id="form-courier" class="form-select">
+                      <option value="India Post">India Post (Speed / Regd)</option>
+                      <option value="Delhivery">Delhivery</option>
+                      <option value="Blue Dart">Blue Dart</option>
+                      <option value="DTDC">DTDC</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="form-tracking-id">Tracking ID / Consignment No.</label>
+                    <input type="text" id="form-tracking-id" class="form-input font-mono" placeholder="e.g. EK941350881IN">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="form-order-status">Order Status</label>
+                    <select id="form-order-status" class="form-select">
+                      <option value="Packed" selected>Packed</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Returned">Returned</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="form-delivered-date">Delivered Date</label>
+                    <input type="date" id="form-delivered-date" class="form-input">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 3: Payment & Remarks -->
+              <div class="form-card">
+                <div class="form-card-title">💳 Payment & Notes</div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="form-payment-status">Payment Status</label>
+                    <select id="form-payment-status" class="form-select">
+                      <option value="COD" selected>COD</option>
+                      <option value="Online">Online</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="form-cod-amount">COD Amount (₹)</label>
+                    <input type="number" id="form-cod-amount" class="form-input" value="0" min="0" step="1">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="form-remarks">Internal Remarks / Notes</label>
+                  <textarea id="form-remarks" class="form-textarea" placeholder="Notes for shipping team or customer instructions..."></textarea>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Form Action Buttons -->
+            <div class="form-actions-bar">
+              <button type="button" class="btn btn-secondary" onclick="window.KPApp.clearOrderForm()">Clear Form</button>
+              <button type="button" class="btn btn-primary" id="btn-save-order" onclick="window.KPApp.handleSaveOrder()">💾 Save Order</button>
+              <button type="button" class="btn btn-primary" id="btn-update-order" style="display:none;" onclick="window.KPApp.handleUpdateOrder()">✏️ Update Order</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ==============================================================
+             VIEW 3: ALL ORDERS TABLE & FILTERS
+             ============================================================== -->
+        <section class="view-section" id="view-orders-all">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Book Orders Registry</h1>
+              <p class="page-subtitle">Track, filter, update statuses, view customer delivery addresses and dispatch WhatsApp notifications</p>
+            </div>
+            <div class="page-actions">
+              <span class="status-badge badge-shipped" id="orders-filtered-count">0 Orders</span>
+              <button class="btn btn-secondary btn-sm" onclick="window.KPReports.exportOrdersToCSV()">📥 Export CSV</button>
+              <label class="btn btn-primary btn-sm font-semibold" style="margin:0; cursor:pointer;" title="Upload Excel (.xlsx, .xls) or CSV Order Sheet">
+                📊 Upload Excel (.xlsx)
+                <input type="file" id="excel-import-input" accept=".xlsx, .xls, .csv" style="display:none;" onchange="window.KPApp.handleExcelUpload(this.files[0])">
+              </label>
+              <button class="btn btn-secondary btn-sm" style="color:var(--color-danger);" onclick="window.KPApp.clearAllOrdersWithConfirm()" title="Clear all orders">🗑️ Clear All</button>
+              <button class="btn btn-primary btn-sm" onclick="window.KPApp.navigateTo('add-order')">+ New Order</button>
+            </div>
+          </div>
+
+          <!-- Multi-Criteria Filter Bar -->
+          <div class="card">
+            <div class="filter-bar">
+              <div class="filter-search">
+                <span class="search-icon-inside">🔍</span>
+                <input 
+                  type="search" 
+                  id="table-search-input" 
+                  name="kp_table_search_filter"
+                  autocomplete="off" 
+                  autocorrect="off" 
+                  autocapitalize="off" 
+                  spellcheck="false" 
+                  data-lpignore="true" 
+                  data-form-type="other"
+                  placeholder="Instant search customer, mobile, tracking, book, pin..."
+                >
+              </div>
+
+              <div class="filter-group">
+                <label for="table-filter-status">Status:</label>
+                <select id="table-filter-status" class="filter-select">
+                  <option value="all">All Statuses</option>
+                  <option value="Packed">Packed</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Returned">Returned</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label for="table-filter-payment">Payment:</label>
+                <select id="table-filter-payment" class="filter-select">
+                  <option value="all">All Payments</option>
+                  <option value="COD">COD</option>
+                  <option value="Online">Online</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label for="table-filter-wa">WhatsApp:</label>
+                <select id="table-filter-wa" class="filter-select">
+                  <option value="all">All WA Status</option>
+                  <option value="Pending">Message Pending</option>
+                  <option value="Sent">Message Sent</option>
+                  <option value="Failed">Failed</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label for="table-filter-date">Date:</label>
+                <select id="table-filter-date" class="filter-select">
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="custom">Custom Date</option>
+                </select>
+              </div>
+
+              <div class="filter-group" id="custom-date-inputs" style="display:none;">
+                <input type="date" id="custom-start-date" class="filter-select" title="Start Date">
+                <span>to</span>
+                <input type="date" id="custom-end-date" class="filter-select" title="End Date">
+              </div>
+
+              <button class="btn btn-secondary btn-sm" onclick="window.KPApp.resetFilters()">Reset</button>
+            </div>
+
+            <!-- Bulk Selection Action Bar -->
+            <div class="bulk-bar" id="orders-bulk-bar">
+              <span id="orders-selected-count">0 Selected</span>
+              <div class="bulk-actions">
+                <button class="btn btn-secondary btn-xs" onclick="window.KPApp.openBulkChangeBookAmountModal()">📚 Change Book / Amount</button>
+                <button class="btn btn-wa-send btn-xs" onclick="window.KPApp.openBulkWhatsAppModal()">💬 Send WhatsApp</button>
+                <button class="btn btn-secondary btn-xs" onclick="window.KPApp.printSelectedLabels()">🏷️ Print Labels</button>
+              </div>
+            </div>
+
+            <!-- Desktop Orders Table -->
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th class="col-checkbox">
+                      <input type="checkbox" id="select-all-orders-checkbox" onchange="window.KPApp.toggleSelectAllOrders()">
+                    </th>
+                    <th>S.No.</th>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Mobile</th>
+                    <th>Date</th>
+                    <th>Book</th>
+                    <th>Tracking ID</th>
+                    <th>Address</th>
+                    <th>COD</th>
+                    <th>Order Status</th>
+                    <th>Payment</th>
+                    <th>WhatsApp</th>
+                    <th>Delivered</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-table-body">
+                  <!-- Populated dynamically by app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             VIEW 4: WHATSAPP MESSAGES (BULK DISPATCH)
+             ============================================================== -->
+        <section class="view-section" id="view-whatsapp">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">WhatsApp Communication Center</h1>
+              <p class="page-subtitle">Batch send tracking notifications, dispatch confirmations & delivery alerts</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-outline btn-sm" onclick="window.KPApp.selectAllWhatsApp(false)">Select All</button>
+              <button class="btn btn-outline btn-sm" onclick="window.KPApp.selectAllWhatsApp(true)">Select Pending</button>
+              <button class="btn btn-wa-send btn-sm" onclick="window.KPApp.openBulkWhatsAppModal()">
+                💬 Send Selected Messages (<span id="whatsapp-selected-count">0</span>)
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📱 Order Messaging Queue</div>
+              <div class="wa-filters">
+                <button class="btn btn-xs btn-outline wa-filter-btn active" data-filter="all" onclick="window.KPApp.filterWhatsAppMessages('all')">All</button>
+                <button class="btn btn-xs btn-outline wa-filter-btn" data-filter="Pending" onclick="window.KPApp.filterWhatsAppMessages('Pending')">Pending</button>
+                <button class="btn btn-xs btn-outline wa-filter-btn" data-filter="Sent" onclick="window.KPApp.filterWhatsAppMessages('Sent')">Sent</button>
+                <button class="btn btn-xs btn-outline wa-filter-btn" data-filter="Failed" onclick="window.KPApp.filterWhatsAppMessages('Failed')">Failed</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Select</th>
+                    <th>S.No.</th>
+                    <th>Customer</th>
+                    <th>Mobile</th>
+                    <th>Book</th>
+                    <th>Tracking ID</th>
+                    <th>Order Status</th>
+                    <th>Message Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="whatsapp-messages-table-body">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             VIEW 5: SHIPPING LABELS & PDF IMPORT
+             ============================================================== -->
+        <section class="view-section" id="view-shipping-labels">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Shipping Labels & PDF Label Import</h1>
+              <p class="page-subtitle">Extract order details from India Post / courier PDF labels automatically</p>
+            </div>
+          </div>
+
+          <!-- Section A: PDF Shipping Label Importer -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🇮🇳 India Post Shipping Label & Courier Importer</div>
+              <span class="status-badge badge-shipped">Auto Tracking + Name + Mobile + Address + PIN + State</span>
+            </div>
+            <div class="card-body">
+              <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:0.86rem; color:#166534;">
+                ⚡ <strong>Instant Extraction:</strong> Upload India Post Speed Post, BNPL, or courier PDF labels. Tracking ID, Customer Name, Mobile Number, Address, PIN Code & State are automatically captured. You can review or batch customize Book Name & Amount before saving!
+              </div>
+
+              <div class="form-row" style="margin-bottom:14px;">
+                <!-- Excel / Spreadsheet Upload Zone -->
+                <div class="drop-zone" id="excel-view5-drop-zone" style="background:linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); border:2px dashed #10b981; cursor:pointer;" onclick="document.getElementById('excel-file-input').click()">
+                  <div class="drop-zone-icon">📊</div>
+                  <div class="drop-zone-title" style="color:#0f766e;">Click or Drop Excel Sheet (.xlsx / .xls / .csv)</div>
+                  <div class="drop-zone-sub">Auto-extracts Customer Name, Phone, Address, PIN, Book, Amount & COD</div>
+                  <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv, .pdf, .png, .jpg, .jpeg, .txt" multiple style="display:none;" onchange="window.KPApp.handleBatchUpload(this.files)">
+                </div>
+
+                <!-- India Post & Courier Drop Zone -->
+                <div class="drop-zone" id="pdf-drop-zone" onclick="document.getElementById('pdf-file-input').click()">
+                  <div class="drop-zone-icon">🏷️</div>
+                  <div class="drop-zone-title">Click to Select or Drop India Post / Courier Labels</div>
+                  <div class="drop-zone-sub">Upload 1 or batch of PDF labels, images, or sheets (Single or multi-label per page)</div>
+                  <input type="file" id="pdf-file-input" accept=".pdf, .xlsx, .xls, .csv, .png, .jpg, .jpeg, .txt" multiple style="display:none;" onchange="window.KPApp.handleBatchUpload(this.files)">
+                </div>
+              </div>
+
+              <!-- Paste Label Text Zone -->
+              <div class="paste-box-container">
+                <label class="form-label" style="font-weight:700;">📋 Or Paste Label Text (SMS / Portal / Booking Slip):</label>
+                <textarea id="paste-label-textarea" class="form-textarea" style="min-height:70px; font-size:0.82rem;" placeholder="Paste raw India Post tracking details or receipt text here..."></textarea>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.KPApp.handlePastedTextImport()">
+                  ⚡ Extract & Review Details
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hidden container preserved for print-selected-labels -->
+          <div id="labels-preview-container" class="labels-preview-print-only"></div>
+        </section>
+
+        <!-- ==============================================================
+             VIEW 6: REPORTS & ANALYTICS
+             ============================================================== -->
+        <section class="view-section" id="view-reports">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Literature Distribution Reports</h1>
+              <p class="page-subtitle">Dispatch statistics, financial breakdown & courier analysis</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print Report</button>
+              <button class="btn btn-primary btn-sm" onclick="window.KPReports.exportOrdersToCSV()">📥 Export Orders CSV</button>
+            </div>
+          </div>
+
+          <!-- Analytics KPI Cards -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card-header"><span class="stat-title">Total Orders</span></div>
+              <div class="stat-value" id="report-total-orders">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header"><span class="stat-title">Total COD Value</span></div>
+              <div class="stat-value" id="report-cod-amount">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header"><span class="stat-title">Paid Amount</span></div>
+              <div class="stat-value" id="report-paid-amount">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header"><span class="stat-title">Pending COD</span></div>
+              <div class="stat-value" id="report-pending-cod">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header"><span class="stat-title">Delivered</span></div>
+              <div class="stat-value" id="report-delivered">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header"><span class="stat-title">Returned</span></div>
+              <div class="stat-value" id="report-returned">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header"><span class="stat-title">Cancelled</span></div>
+              <div class="stat-value" id="report-cancelled">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header"><span class="stat-title">WA Sent</span></div>
+              <div class="stat-value" id="report-wa-sent">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header"><span class="stat-title">WA Pending</span></div>
+              <div class="stat-value" id="report-wa-pending">0</div>
+            </div>
+          </div>
+
+          <!-- Breakdown Tables -->
+          <div class="form-grid">
+            <div class="card">
+              <div class="card-header"><div class="card-title">📚 Literature Dispatched Breakdown</div></div>
+              <div class="card-body">
+                <table class="data-table">
+                  <thead>
+                    <tr><th>Book Title</th><th style="text-align:right;">Quantity</th></tr>
+                  </thead>
+                  <tbody id="report-books-breakdown"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><div class="card-title">🚚 Courier Distribution</div></div>
+              <div class="card-body">
+                <table class="data-table">
+                  <thead>
+                    <tr><th>Courier</th><th style="text-align:right;">Shipments</th></tr>
+                  </thead>
+                  <tbody id="report-courier-breakdown"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             VIEW 7: SETTINGS
+             ============================================================== -->
+        <section class="view-section" id="view-settings">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">System Settings & WhatsApp Configuration</h1>
+              <p class="page-subtitle">Configure publication business details, WhatsApp message template, couriers and backups</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary btn-sm" onclick="window.KPApp.handleSaveSettings()">💾 Save Settings</button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <!-- Business Info -->
+            <div class="form-card">
+              <div class="form-card-title">🏢 Business Information</div>
+
+              <div class="form-group">
+                <label class="form-label">Business Name (वेबसाइट का नाम)</label>
+                <input type="text" id="settings-business-name" class="form-input font-bold" value="Kabir Publication" placeholder="Business Name">
+                <div class="form-help">Enter official business title</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Business Subtitle / Tagline</label>
+                <input type="text" id="settings-business-sub" class="form-input" value="Book Order Management System" placeholder="Tagline">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Business WhatsApp Number</label>
+                <input type="text" id="settings-business-wa" class="form-input font-mono" value="9413508833">
+                <div class="form-help">Default sender helpline: 9413508833</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Sender / Return Address</label>
+                <textarea id="settings-sender-address" class="form-textarea">Kabir Publication, Satlok Ashram, Barwala (Hisar), Haryana - 125121</textarea>
+              </div>
+            </div>
+
+            <!-- Books Management Card -->
+            <div class="form-card">
+              <div class="form-card-title">📚 Books Management (Pustak List Management)</div>
+              <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:12px;">
+                Aap jo bhi book names yahan add karenge ya orders mein likhenge, wahi system mein save rahenge.
+              </p>
+
+              <div class="form-group">
+                <label class="form-label">Add New Book (Nayi Pustak Ka Naam):</label>
+                <div style="display:flex; gap:8px;">
+                  <input type="text" id="settings-new-book-input" class="form-input" placeholder="Type book name here...">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="window.KPApp.handleAddNewBook()">+ Add Book</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Default Book for New Orders / Imports:</label>
+                <input type="text" id="settings-default-book" class="form-input" list="book-suggestions" placeholder="Default book (or leave empty)">
+                <div class="form-help">Naye orders ya label import par yeh default book use hogi.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Saved Books List (Click ❌ to remove):</label>
+                <div id="settings-books-chip-list" style="display:flex; flex-wrap:wrap; gap:8px; padding:10px; background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; min-height:48px;">
+                  <!-- Dynamically populated chips -->
+                </div>
+              </div>
+            </div>
+
+            <!-- WhatsApp Configuration -->
+            <div class="form-card">
+              <div class="form-card-title">💬 WhatsApp Sending Mode</div>
+
+              <div class="form-group">
+                <label class="form-label">Sending Mode</label>
+                <select id="settings-wa-mode" class="form-select" onchange="window.KPApp.toggleCloudApiSettingsUI(this.value === 'cloud_api')">
+                  <option value="manual">Manual WhatsApp (wa.me deep link)</option>
+                  <option value="cloud_api">WhatsApp Cloud API (Meta Backend)</option>
+                </select>
+                <div class="form-help">Manual opens wa.me links directly from device WhatsApp.</div>
+              </div>
+
+              <div id="settings-cloud-api-fields" style="display:none;">
+                <div class="form-group">
+                  <label class="form-label">Meta Access Token</label>
+                  <input type="password" id="settings-cloud-token" class="form-input" placeholder="EAAB...">
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Phone Number ID</label>
+                    <input type="text" id="settings-cloud-phone-id" class="form-input font-mono">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Business Account ID</label>
+                    <input type="text" id="settings-cloud-biz-id" class="form-input font-mono">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message Template -->
+              <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <label class="form-label" style="margin:0;">Tracking Message Template</label>
+                  <button type="button" class="btn btn-outline btn-xs" onclick="window.KPApp.previewWhatsAppTemplate()">👁️ Preview Message</button>
+                </div>
+
+                <!-- Variable Chips -->
+                <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px;">
+                  <button type="button" class="btn-xs btn-secondary" onclick="window.KPApp.insertTemplateVariable('{{name}}')" title="Click to insert {{name}}">+ {{name}}</button>
+                  <button type="button" class="btn-xs btn-secondary" onclick="window.KPApp.insertTemplateVariable('{{mobile}}')" title="Click to insert {{mobile}}">+ {{mobile}}</button>
+                  <button type="button" class="btn-xs btn-secondary" onclick="window.KPApp.insertTemplateVariable('{{book}}')" title="Click to insert {{book}}">+ {{book}}</button>
+                  <button type="button" class="btn-xs btn-secondary" onclick="window.KPApp.insertTemplateVariable('{{tracking}}')" title="Click to insert {{tracking}}">+ {{tracking}}</button>
+                  <button type="button" class="btn-xs btn-secondary" onclick="window.KPApp.insertTemplateVariable('{{tracking_link}}')" title="Click to insert {{tracking_link}}">+ {{tracking_link}}</button>
+                  <button type="button" class="btn-xs btn-secondary" onclick="window.KPApp.insertTemplateVariable('{{cod}}')" title="Click to insert {{cod}}">+ {{cod}}</button>
+                  <button type="button" class="btn-xs btn-secondary" onclick="window.KPApp.insertTemplateVariable('{{order_id}}')" title="Click to insert {{order_id}}">+ {{order_id}}</button>
+                  <button type="button" class="btn-xs btn-secondary" onclick="window.KPApp.insertTemplateVariable('{{date}}')" title="Click to insert {{date}}">+ {{date}}</button>
+                </div>
+
+                <textarea id="settings-wa-template" class="form-textarea" style="min-height:160px; font-family:var(--font-mono); font-size:0.82rem;"></textarea>
+                <div class="form-help">Variables will be dynamically substituted with customer and shipment details.</div>
+              </div>
+            </div>
+
+            <!-- Order Defaults & Data Management -->
+            <div class="form-card">
+              <div class="form-card-title">📦 Order Defaults</div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Default Order Status</label>
+                  <select id="settings-default-status" class="form-select">
+                    <option value="Packed" selected>Packed</option>
+                    <option value="Shipped">Shipped</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Default Payment Status</label>
+                  <select id="settings-default-payment" class="form-select">
+                    <option value="COD" selected>COD</option>
+                    <option value="Online">Online</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-card-title" style="margin-top:20px;">💾 Backup & Data Management</div>
+              <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.KPApp.exportAllDataJSON()">
+                  📥 Export Complete Data Backup (JSON)
+                </button>
+
+                <label class="btn btn-secondary btn-sm" style="margin:0; cursor:pointer;">
+                  📤 Restore from JSON Backup
+                  <input type="file" id="json-backup-input" accept=".json" style="display:none;">
+                </label>
+
+                <button type="button" class="btn btn-danger btn-sm" onclick="window.KPApp.clearAllData()">
+                  ⚠️ Clear All Local Data
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ==============================================================
+       MODALS
+       ============================================================== -->
+
+  <!-- Modal 1: Complete Delivery Address View & Copy -->
+  <div class="modal-backdrop" id="modal-view-address">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">📍 Customer Delivery Address</h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-view-address')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="address-display-box">
+          <h4 id="modal-address-name">Customer Name</h4>
+          <div class="phone-tag" id="modal-address-phone">+91 0000000000</div>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;" id="modal-address-type">Address Type</div>
+          <div id="modal-address-full" style="font-weight:500; margin-bottom:8px;">Full Street Address</div>
+          <div id="modal-address-city">City, State</div>
+          <div id="modal-address-pin" style="font-weight:700;">PIN: ------</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="window.KPApp.copyFormattedAddress()">📋 Copy Address</button>
+        <button class="btn btn-secondary" onclick="window.KPApp.closeModal('modal-view-address')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Full Order Details -->
+  <div class="modal-backdrop" id="modal-order-details">
+    <div class="modal-box" style="max-width:680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Order Details: <span id="detail-order-id" class="font-mono"></span></h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-order-details')">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="detail-section">
+          <div class="detail-section-title">Customer Information</div>
+          <div class="detail-grid">
+            <div><strong>Name:</strong> <span id="detail-customer-name"></span></div>
+            <div><strong>Mobile:</strong> <span id="detail-customer-phone" class="font-mono"></span></div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Delivery Address</div>
+          <div class="detail-grid">
+            <div class="detail-item-full"><strong>Address:</strong> <span id="detail-address"></span></div>
+            <div class="detail-item-full"><strong>Location:</strong> <span id="detail-city-state-pin"></span></div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Product & Shipping</div>
+          <div class="detail-grid">
+            <div><strong>Book:</strong> <span id="detail-book-name"></span></div>
+            <div><strong>Quantity:</strong> <span id="detail-quantity"></span></div>
+            <div><strong>Courier:</strong> <span id="detail-courier"></span></div>
+            <div><strong>Tracking ID:</strong> <span id="detail-tracking-id" class="font-mono tracking-text"></span></div>
+            <div><strong>Order Status:</strong> <span id="detail-status"></span></div>
+            <div><strong>Created:</strong> <span id="detail-created-date"></span></div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Payment & Communication</div>
+          <div class="detail-grid">
+            <div><strong>Payment Status:</strong> <span id="detail-payment-status"></span></div>
+            <div><strong>COD Amount:</strong> <span id="detail-cod-amount" class="font-bold"></span></div>
+            <div><strong>WhatsApp Status:</strong> <span id="detail-wa-status"></span></div>
+            <div><strong>Last Message Sent:</strong> <span id="detail-last-wa-time"></span></div>
+            <div class="detail-item-full"><strong>Remarks:</strong> <span id="detail-remarks"></span></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="flex-wrap:wrap; gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="window.KPApp.copyFormattedAddress()">📍 Copy Address</button>
+        <button class="btn btn-outline btn-sm" onclick="window.KPApp.copyActiveOrderTracking()">📋 Copy Tracking</button>
+        <button class="btn btn-wa-send btn-sm" onclick="window.KPApp.sendActiveOrderWhatsApp()">💬 Send WhatsApp</button>
+        <button class="btn btn-primary btn-sm" onclick="window.KPApp.editActiveOrder()">✏️ Edit Order</button>
+        <button class="btn btn-secondary btn-sm" onclick="window.KPApp.closeModal('modal-order-details')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Edit Tracking ID -->
+  <div class="modal-backdrop" id="modal-edit-tracking">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Tracking Information</h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-edit-tracking')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Tracking ID / Consignment Number <span class="req">*</span></label>
+          <input type="text" id="input-edit-tracking-id" class="form-input font-mono" placeholder="e.g. EK941350881IN">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Courier</label>
+          <select id="select-edit-tracking-courier" class="form-select">
+            <option value="India Post">India Post</option>
+            <option value="Delhivery">Delhivery</option>
+            <option value="Blue Dart">Blue Dart</option>
+            <option value="DTDC">DTDC</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.KPApp.closeModal('modal-edit-tracking')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-tracking-modal">Save Tracking ID</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Bulk WhatsApp Dispatch Queue -->
+  <div class="modal-backdrop" id="modal-bulk-whatsapp">
+    <div class="modal-box" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 class="modal-title">💬 WhatsApp Bulk Dispatch</h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-bulk-whatsapp')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="bulk-confirm-count" style="font-weight:600; margin-bottom:8px;"></p>
+        <div class="progress-container">
+          <div class="progress-bar" id="bulk-progress-bar"></div>
+        </div>
+        <div id="bulk-status-text" class="text-xs text-muted">Ready to dispatch...</div>
+
+        <div class="bulk-queue-list" id="bulk-queue-items">
+          <!-- Queue items rendered dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.KPApp.closeModal('modal-bulk-whatsapp')">Done</button>
+        <button class="btn btn-wa-send" onclick="window.KPWhatsApp.processNextBulkItem()">▶️ Send Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: PDF Import Progress -->
+  <div class="modal-backdrop" id="modal-pdf-progress">
+    <div class="modal-box" style="max-width:440px; text-align:center;">
+      <div class="modal-body">
+        <div style="font-size:2.4rem; margin-bottom:12px;">📑</div>
+        <h3 style="margin-bottom:8px;">Importing Shipping Labels...</h3>
+        <div class="progress-container">
+          <div class="progress-bar" id="pdf-progress-bar"></div>
+        </div>
+        <p class="text-xs text-muted" id="pdf-status-text">Parsing PDF pages...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: PDF Import Results Summary -->
+  <div class="modal-backdrop" id="modal-import-results">
+    <div class="modal-box" style="max-width:620px;">
+      <div class="modal-header">
+        <h3 class="modal-title">PDF Import Summary</h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-import-results')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="finance-highlight-row" style="margin-bottom:14px;">
+          <div class="finance-card">
+            <div class="finance-info">
+              <div class="finance-label">Imported</div>
+              <div class="finance-val" style="color:var(--success);" id="import-stat-imported">0</div>
+            </div>
+          </div>
+          <div class="finance-card">
+            <div class="finance-info">
+              <div class="finance-label">Duplicates</div>
+              <div class="finance-val" style="color:var(--warning);" id="import-stat-duplicate">0</div>
+            </div>
+          </div>
+          <div class="finance-card">
+            <div class="finance-info">
+              <div class="finance-label">Failed</div>
+              <div class="finance-val" style="color:var(--danger);" id="import-stat-failed">0</div>
+            </div>
+          </div>
+          <div class="finance-card">
+            <div class="finance-info">
+              <div class="finance-label">OCR Required</div>
+              <div class="finance-val" id="import-stat-ocr">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="max-height:220px; overflow-y:auto;" id="import-results-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="window.KPApp.closeModal('modal-import-results')">View Orders</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Duplicate Order Warning -->
+  <div class="modal-backdrop" id="modal-duplicate-warning">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">⚠️ Possible Duplicate Order Found</h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-duplicate-warning')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>An existing order with matching tracking number or customer details was found in the database:</p>
+        <div class="address-display-box" style="margin-top:10px;">
+          <div><strong>Order ID:</strong> <span id="dup-existing-id"></span></div>
+          <div><strong>Customer:</strong> <span id="dup-existing-name"></span></div>
+          <div><strong>Mobile:</strong> <span id="dup-existing-phone"></span></div>
+          <div><strong>Tracking:</strong> <span id="dup-existing-tracking"></span></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.KPApp.closeModal('modal-duplicate-warning')">Cancel</button>
+        <button class="btn btn-outline" id="btn-dup-view-existing">View Existing</button>
+        <button class="btn btn-primary" id="btn-dup-force-import">Save Anyway</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 8: WhatsApp Message Template Live Preview -->
+  <div class="modal-backdrop" id="modal-template-preview">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">💬 WhatsApp Message Live Preview</h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-template-preview')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-xs text-muted" style="margin-bottom:12px;">This is how the message will appear in customer's WhatsApp chat with dynamic order variables substituted:</p>
+        <div style="background:#e5ddd5; border-radius:12px; padding:16px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.1);">
+          <div style="background:#ffffff; border-radius:8px 8px 8px 0; padding:12px 14px; max-width:95%; font-size:0.86rem; line-height:1.45; white-space:pre-wrap; word-break:break-word; box-shadow:0 1px 2px rgba(0,0,0,0.15); font-family:var(--font-sans);" id="template-preview-text">
+          </div>
+        </div>
+        <div style="margin-top:10px; font-size:0.8rem; color:#047857; display:flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; padding:6px 10px; border-radius:6px;">
+          <span>💡 <strong>Tip:</strong> Upar WhatsApp message mein Tracking ID par direct click karein toh woh turant copy ho jayegi.</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="window.KPApp.copyWhatsAppPreviewTracking()" title="Click to copy Tracking ID from WhatsApp message">
+            📋 Copy Tracking ID (<span id="wa-preview-tracking-label">--</span>)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.KPApp.copyWhatsAppPreviewText()" title="Copy entire WhatsApp message text">
+            💬 Copy Message
+          </button>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.KPApp.closeModal('modal-template-preview')">Close Preview</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 9: India Post Label Import & Batch Book/Amount Editor -->
+  <div class="modal-backdrop" id="modal-india-post-review">
+    <div class="modal-box" style="max-width:960px; max-height:92vh;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="import-review-modal-title">🇮🇳 India Post Label Import & Batch Review</h3>
+          <span class="status-badge badge-shipped" id="import-review-total-count" style="margin-top:4px;">0 Labels Found</span>
+        </div>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-india-post-review')">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:16px;">
+        <div style="background:#e0f2fe; border:1px solid #bae6fd; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:0.84rem; color:#0369a1;">
+          ✅ <strong>Auto-Extracted:</strong> Tracking ID, Receiver Name, Phone, Address, PIN Code & State are extracted automatically.
+          <br>📚 <strong>Customize:</strong> Set the Book Name and COD Amount below for all or individual orders before saving.
+        </div>
+
+        <!-- Batch Controls -->
+        <div class="batch-control-bar">
+          <div class="batch-group" style="flex: 1; min-width: 280px;">
+            <label style="font-size:0.82rem; font-weight:700;">📚 Set All Books (Pustak Ka Naam):</label>
+            <div style="display:flex; gap:6px; flex:1;">
+              <input type="text" id="batch-import-book-input" class="form-input input-xs font-bold" list="book-suggestions" placeholder="Type ANY book name or pick..." style="flex:1;">
+              <button type="button" class="btn btn-xs btn-primary" onclick="window.KPApp.applyBatchBookToCandidates(document.getElementById('batch-import-book-input').value)">Apply to All</button>
+            </div>
+          </div>
+
+          <div class="batch-group">
+            <label style="font-size:0.8rem; font-weight:700;">Set All Amounts (₹):</label>
+            <input type="number" id="batch-import-amt-input" class="form-input input-xs" style="width:75px;" placeholder="0" min="0">
+            <button type="button" class="btn btn-xs btn-secondary" onclick="window.KPApp.applyBatchAmountToCandidates(document.getElementById('batch-import-amt-input').value)">Apply</button>
+            <button type="button" class="btn btn-xs btn-outline" onclick="window.KPApp.applyBatchAmountToCandidates(0)">₹0 (Free)</button>
+            <button type="button" class="btn btn-xs btn-outline" onclick="window.KPApp.applyBatchAmountToCandidates(100)">₹100</button>
+            <button type="button" class="btn btn-xs btn-outline" onclick="window.KPApp.applyBatchAmountToCandidates(150)">₹150</button>
+          </div>
+        </div>
+
+        <!-- Candidates Table -->
+        <div class="table-responsive" style="max-height:420px; overflow-y:auto;">
+          <table class="data-table" style="font-size:0.82rem;">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th style="width:140px;">Tracking ID</th>
+                <th style="width:150px;">Receiver Name</th>
+                <th style="width:110px;">Phone</th>
+                <th>Delivery Address & State</th>
+                <th style="width:160px;">Book Name</th>
+                <th style="width:90px;">COD (₹)</th>
+                <th style="width:40px;">Del</th>
+              </tr>
+            </thead>
+            <tbody id="import-review-table-body">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.KPApp.closeModal('modal-india-post-review')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.KPApp.confirmAndSaveImportedCandidates()">✅ Save All Orders (Packed)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 10: Quick Edit Book & COD Amount -->
+  <div class="modal-backdrop" id="modal-quick-edit-book-amount">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📖 Change Book Name & Amount</h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-quick-edit-book-amount')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:0.86rem; color:var(--text-muted); margin-bottom:12px;">
+          Order: <strong id="quick-edit-customer-display" style="color:var(--text-main);"></strong>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Book Name</label>
+          <input type="text" id="quick-edit-book-name" class="form-input" list="book-suggestions" placeholder="Book Title" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">COD Amount (₹)</label>
+            <input type="number" id="quick-edit-cod-amount" class="form-input" min="0" step="1">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Payment Status</label>
+            <select id="quick-edit-payment-status" class="form-select">
+              <option value="COD" selected>COD</option>
+              <option value="Online">Online</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.KPApp.closeModal('modal-quick-edit-book-amount')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.KPApp.saveQuickEditBookAmount()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 11: Bulk Change Book & COD Amount for Selected Orders -->
+  <div class="modal-backdrop" id="modal-bulk-change-book-amount">
+    <div class="modal-box" style="max-width:460px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📚 Bulk Change Book & Amount</h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-bulk-change-book-amount')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="bulk-change-count-text" style="font-weight:600; font-size:0.9rem; margin-bottom:14px;"></p>
+
+        <div class="form-group" style="background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:12px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; margin-bottom:8px;">
+            <input type="checkbox" id="bulk-apply-book-check" checked>
+            <span>Change Book Name to:</span>
+          </label>
+          <input type="text" id="bulk-change-book-name" class="form-input font-bold" list="book-suggestions" placeholder="Type whatever book name you want...">
+        </div>
+
+        <div class="form-group" style="background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:12px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; margin-bottom:8px;">
+            <input type="checkbox" id="bulk-apply-amt-check">
+            <span>Change Amount to:</span>
+          </label>
+          <div class="form-row">
+            <input type="number" id="bulk-change-cod-amount" class="form-input" value="0" min="0" placeholder="Amount (₹)">
+            <select id="bulk-change-payment-status" class="form-select">
+              <option value="COD" selected>COD</option>
+              <option value="Online">Online</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.KPApp.closeModal('modal-bulk-change-book-amount')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.KPApp.saveBulkChangeBookAmount()">Apply to Selected</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 12: Database & Multi-Device Real-Time Sync Center -->
+  <div class="modal-backdrop" id="modal-device-sync">
+    <div class="modal-box" style="max-width:580px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🗄️ Database & Multi-Device Sync Center</h3>
+        <button class="modal-close" onclick="window.KPApp.closeModal('modal-device-sync')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="sync-connection-status" style="margin-bottom:12px; font-size:0.88rem;"></div>
+
+        <!-- Database Metrics Summary Card -->
+        <div class="db-metric-grid" id="sync-db-metrics">
+          <div class="db-metric-card">
+            <div class="db-metric-val" id="sync-db-orders-val">6</div>
+            <div class="db-metric-label">Orders in Database</div>
+          </div>
+          <div class="db-metric-card">
+            <div class="db-metric-val" id="sync-db-type-val" style="font-size:0.95rem; color:#16a34a;">Active</div>
+            <div class="db-metric-label">Database Status</div>
+          </div>
+          <div class="db-metric-card">
+            <div class="db-metric-val" id="sync-db-devices-val">1</div>
+            <div class="db-metric-label">Active Devices</div>
+          </div>
+          <div class="db-metric-card">
+            <div class="db-metric-val" id="sync-db-backups-val">0</div>
+            <div class="db-metric-label">Auto Backups</div>
+          </div>
+        </div>
+
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:0.83rem; color:#166534; line-height:1.45;">
+          <strong>✅ Database Active & Auto-Saving:</strong> Aap jo bhi order save ya edit karenge, woh permanent database (<code>data/orders.json</code>) main store rahega. Koi bhi dusra device website kholega toh latest changes data turant show hoga!
+        </div>
+
+        <!-- Mobile & Other Devices Link -->
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" style="font-weight:700; color:#0f172a; display:flex; justify-content:space-between;">
+            <span>📱 Mobile / Dusre Laptop Main Kholne Ka Link:</span>
+            <span style="font-size:0.75rem; font-weight:600; color:#2563eb;">(Same Wi-Fi / Hotspot)</span>
+          </label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="sync-network-url" class="form-input font-mono input-sm" readonly style="flex:1; font-weight:700; background:#f8fafc; color:#1e293b;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.KPApp.copyNetworkUrl()">📋 Copy Link</button>
+          </div>
+          <div class="form-help" style="margin-top:4px;">Apne mobile browser main yeh link open karein aur <code>admin</code> / <code>admin@123</code> se login karein.</div>
+        </div>
+
+        <!-- Database Action Buttons -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="window.KPApp.handleForceDbRefresh()" style="flex:1;">
+            🔄 Refresh from Database
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.KPApp.handleSyncAllToDb()" style="flex:1;">
+            ⬆️ Push All to Database
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="window.KPApp.handleDownloadDbBackup()" style="flex:1;">
+            💾 Download Backup
+          </button>
+        </div>
+
+        <!-- Advance Cloud Database Accordion -->
+        <details style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; margin-top:8px;">
+          <summary style="font-size:0.82rem; font-weight:700; color:#475569; cursor:pointer;">
+            🌐 Cloud Database (Netlify / Internet par chalane ke liye)
+          </summary>
+          <div style="margin-top:10px; font-size:0.8rem; color:#64748b;">
+            Agar aap website ko Netlify ya alag-alag internet network par bina laptop on rakhe chalana chahte hain, toh yahan apna Firebase Realtime Database URL daal sakte hain:
+            <div style="display:flex; gap:6px; margin-top:6px;">
+              <input type="url" id="sync-firebase-url-input" class="form-input input-xs font-mono" placeholder="https://your-app-default-rtdb.firebaseio.com">
+              <button type="button" class="btn btn-secondary btn-xs" onclick="window.KPApp.handleSaveFirebaseDbUrl()">Save</button>
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <span id="sync-connected-devices-count" style="font-size:0.78rem; color:var(--text-muted);">1 Device(s) Active</span>
+        <button class="btn btn-primary btn-sm" onclick="window.KPApp.closeModal('modal-device-sync')">Done / Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Modules -->
+  <script src="js/storage.js?v=2.0"></script>
+  <script src="js/whatsapp.js?v=2.0"></script>
+  <script src="js/india-post-importer.js?v=2.0"></script>
+  <script src="js/pdf-importer.js?v=2.0"></script>
+  <script src="js/excel-importer.js?v=2.0"></script>
+  <script src="js/label-generator.js?v=2.0"></script>
+  <script src="js/reports.js?v=2.0"></script>
+  <script src="js/auth.js?v=2.0"></script>
+  <script src="js/app.js?v=2.0"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('PWA Service Worker registered:', reg.scope);
+        }).catch((err) => {
+          console.log('Service Worker registration skipped or failed:', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
